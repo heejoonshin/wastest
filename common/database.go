@@ -14,7 +14,7 @@ var DB *gorm.DB
 
 // Opening a database and save the reference to `Database` struct.
 func Init() *gorm.DB {
-	db, err := gorm.Open("sqlite3", "./../gorm.db")
+	db, err := gorm.Open("sqlite3", "./gormz.db")
 	if err != nil {
 		fmt.Println("db err: ", err)
 	}
@@ -35,7 +35,6 @@ func TestDBInit() *gorm.DB {
 	DB = test_db
 	return DB
 }
-
 
 // Using this function to get a connection, you can create your connection pool here.
 func GetDB() *gorm.DB {
