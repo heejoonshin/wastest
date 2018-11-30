@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+
 	"github.com/jinzhu/gorm"
 
 	"time"
@@ -18,23 +19,29 @@ type Todo struct {
 	Reflist   []*Todo `gorm:"many2many:ref;association_jointable_foreignkey:todos_id"`
 }
 
-func (todo *Todo) BeforeCreate(scope *gorm.Scope) (err error) {
+func (todo *Todo) BeforeCreate(scope *gorm.Scope) error {
+
 	scope.SetColumn("created_at", time.Now())
-	scope.SetColumn("updated_at", time.Now())
-	fmt.Println("run")
-	return
-}
-func (todo *Todo) BeforeUpdate(scope *gorm.Scope) (err error) {
+
 	scope.SetColumn("updated_at", time.Now())
 
-	return
+	return nil
+
 }
-func (todo *Todo) AfterDelete(scope *gorm.Scope) (err error) {
-	//db := scope.DB()
-	//deleted_id := todo.Id
+func (todo *Todo) BeforeUpdate(scope *gorm.Scope) error {
+
+	scope.SetColumn("updated_at", time.Now())
+
+	return nil
+}
+func (todo *Todo) AfterDelete(scope *gorm.Scope) error {
+	db := scope.DB()
+	deleted_id := todo.Id
 	//해당 작업이 삭제 될 경우 연결 돼 있는 정보를 모두 분리 해 준다.
-	//db.Exec("delete from ref where todos_id = ? or todo_id=?", deleted_id, deleted_id)
-	return
+	if err := db.Exec("delete from ref where todos_id = ? or todo_id=?", deleted_id, deleted_id).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 //해당 todo에 연결된 모든 자식 노드의 정보를 받아오는 함수
@@ -58,81 +65,75 @@ func (todo *Todo) FindById() error {
 }
 func (todo *Todo) CreateTodo() error {
 	db := common.GetDB()
-	var validCount int
-	reflist_count := len(todo.Reflist)
-
-	var err error
-
-	db.Find(&todo.Reflist).Count(validCount)
-	if reflist_count != validCount {
-		return errors.New("Invalid Count")
-
+	newtodo := Todo{
+		Title: todo.Title,
 	}
-	err = db.Create(&todo).Error
-	if err == nil {
-		return nil
-	} else {
+	refcount := len(todo.Reflist)
+	var qeurycount int
+	if len(todo.Reflist) > 0 {
+		querylist := make([]uint, 0)
+		for _, ref := range todo.Reflist {
+			querylist = append(querylist, ref.Id)
+		}
+
+		db.Model(&Todo{}).Where("id in (?)", querylist).Count(&qeurycount)
+		if refcount != qeurycount {
+			return errors.New("Invaild ref")
+		}
+	}
+	fmt.Println(newtodo)
+
+	if err := db.Create(&newtodo).Error; err != nil {
 		return err
 	}
+	if len(todo.Reflist) > 0 {
+		if err := todo.Insertreflist(); err != nil {
+			return err
+
+		}
+	}
+	return nil
+
 }
-func (todo *Todo) Insertreflist() {
+func (todo *Todo) Insertreflist() error {
 
 	db := common.GetDB()
 	reflist := todo.Reflist
-
-	db.Model(&Todo{Id: todo.Id}).Association("Reflist").Append(&reflist)
+	if err := db.Model(&Todo{Id: todo.Id}).Association("Reflist").Clear().Error; err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if err := db.Model(&Todo{Id: todo.Id}).Association("Reflist").Append(&reflist).Error; err != nil {
+		return err
+	}
+	return nil
 
 }
 
-/*
-func (todo *Todo) Delref(childlist []*Todo) (bool,error){
-	if err := todo.GetReflist(); err != nil{
-		return false,err
+func (todo *Todo) UpdateTodo() error {
+	db := common.DB
+	var updatedTodo Todo
+	if err := db.Model(&updatedTodo).Where("id = ?", todo.Id).Update(todo).Error; err != nil {
+		return err
 	}
-	DeleteMap := make(map[uint]bool)
-	for _,child := range childlist{
-		if err := child.FindById(); err != nil{
-			return false,err
-		}
-		//DeleteMap
-	}
-}*/
-/*
-func (todo *Todo) Addref(childlist []*Todo) (bool,error){
-	//db := common.GetDB()
-	if err := todo.GetAllReflist(); err != nil{
-		return false,err
-	}
-	for _,child := range childlist{
-		if err := child.FindById(); err != nil{
-			return false,err
-		}
-		if todo.Done == "N" && child.Done == "Y"{
-			return false,errors.New("Invalid Ref")
-		}
-		check,err:=VaildIntersect(todo,child)
-		if err != nil{
-			return false,err
-		}
-		if !check{
-			return false,nil
-		}
-		todo.Reflist = append(todo.Reflist,&Todo{Id:child.Id})
-		todo.RefAll = append(todo.RefAll,&Todo{Id:child.Id})
-		for _,childref := range child.Reflist{
-			todo.RefAll = append(todo.RefAll,&Todo{Id:childref.Id})
-		}
-	}
-	return true,nil
-}*/
+	return nil
 
-/*
-func (todo *Todo)ValidRefs() (bool,error){
+}
+
+//해당 작업이 완료 상태가 될수 있는지체크
+func (todo *Todo) CheckDone() (bool, error) {
+	var count int
+	var todolist []Todo
 	db := common.GetDB()
-	reflist := todo.Reflist
+	err := db.Preload("Reflist", "Done = ?", "N").Find(&todolist).Count(&count).Error
+	if err == nil {
+		if count == 0 {
+			return true, nil
+		} else {
+			return false, nil
+		}
 
-	db.Preload("Reflist").Find(&reflist)
-
-
-
-}*/
+	} else {
+		return false, err
+	}
+}
