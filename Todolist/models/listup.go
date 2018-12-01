@@ -4,9 +4,9 @@ import "wastest/common"
 
 //페이징 처리
 type Pageination struct {
-	Limit int
-	Page  int
-	Order string
+	Limit int    `json:limit`
+	Page  int    `json:page`
+	Order string `json:order`
 }
 
 func (pageination *Pageination) Listup() ([]*Todo, error) {
@@ -25,10 +25,15 @@ func (pageination *Pageination) Listup() ([]*Todo, error) {
 
 	}
 
-	err := db.Preload("Reflist").Offset(offset).Limit(pageination.Limit).Order(pageination.Order).Find(&todolist).Error
+	err := db.Preload("Children").Offset(offset).Limit(pageination.Limit).Order(pageination.Order).Find(&todolist).Error
+
 	if err != nil {
 		return todolist, err
 	} else {
+
+		for _, todo := range todolist {
+			todo.FindAllInfo()
+		}
 		return todolist, nil
 	}
 
