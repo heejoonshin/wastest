@@ -1,8 +1,9 @@
 package Test
 
 import (
+	//"fmt"
+
 	"fmt"
-	"strconv"
 	"testing"
 	"wastest/Todolist/models"
 	"wastest/common"
@@ -17,9 +18,9 @@ func Init() {
 func InsertDumyData(n int) {
 
 	for i := 0; i < n; i++ {
-		title := "test" + strconv.Itoa(i)
-		todo := models.Todo{Title: title}
-		todo.CreateTodo()
+		//title := "test" + strconv.Itoa(i)
+		//todo := models.Todo{Title: title}
+		//todo.CreateTodo()
 
 	}
 
@@ -27,36 +28,15 @@ func InsertDumyData(n int) {
 func TestCreate(t *testing.T) {
 
 	Init()
-	//InsertDumyData(10)
-
-	db := common.DB
-
-	//Case 1
-	testTodo := models.Todo{Id: 1}
-
-	if err := db.Find(&testTodo).Error; err != nil {
-
-		t.Error(err)
-	} else {
-		fmt.Println(testTodo)
-
-		if testTodo.Title != "test0" {
-			t.Fail()
-
-		}
-	}
-	//Case 2
-	testTodo = models.Todo{
-		Title: "reftest",
-		Reflist: []*models.Todo{
+	//db:=common.GetDB()
+	testcase := models.Todo{
+		Title: "sssssvvs",
+		Children: []*models.Todo{
 			{
-				Id: 1,
-			},
-			{
-				Id: 2,
+				Id: 7,
 			},
 		},
 	}
-	testTodo.CreateTodo()
+	fmt.Println(testcase.IsPossibleConnect(testcase.Children))
 
 }
