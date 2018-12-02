@@ -1,6 +1,8 @@
 package models
 
-import "wastest/common"
+import (
+	"wastest/common"
+)
 
 //페이징 처리
 type Pageination struct {
@@ -8,8 +10,13 @@ type Pageination struct {
 	Page  int    `json:page`
 	Order string `json:order`
 }
+type result struct {
+	Todolist  []*Todo
+	Totaldata int
+	Limit     int
+}
 
-func (pageination *Pageination) Listup() ([]*Todo, error) {
+func (pageination *Pageination) Listup() (res result, err error) {
 
 	db := common.GetDB()
 	offset := pageination.Limit * (pageination.Page - 1)
@@ -25,16 +32,22 @@ func (pageination *Pageination) Listup() ([]*Todo, error) {
 
 	}
 
-	err := db.Preload("Children").Offset(offset).Limit(pageination.Limit).Order(pageination.Order).Find(&todolist).Error
+	err = db.Preload("Children").Offset(offset).Limit(pageination.Limit).Order(pageination.Order).Find(&todolist).Error
+	var totaldata int
+	var temp []*Todo
+	db.Find(&temp).Count(&totaldata)
 
+	//totalpage /=pageination.Limit
 	if err != nil {
-		return todolist, err
+		return res, err
 	} else {
 
 		for _, todo := range todolist {
 			todo.FindAllInfo()
 		}
-		return todolist, nil
+		res = result{Todolist: todolist, Totaldata: totaldata, Limit: pageination.Limit}
+
+		return res, nil
 	}
 
 }

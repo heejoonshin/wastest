@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"reflect"
 	"strconv"
 	"wastest/Todolist/models"
 )
@@ -14,15 +15,47 @@ type Todo struct {
 	Done     string   `json:done`
 	Children []uint64 `json:children"`
 }
+type ViewStruct struct {
+	Id        string
+	CreatedAt string
+	UpdatedAt string
+	Title     string
+	Done      string
+}
+
+func ModelToView(i interface{}) {
+	rt := reflect.TypeOf(i)
+	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
+		fmt.Println(rt.Elem())
+	} else {
+		Values := reflect.ValueOf(i).Elem()
+
+		fmt.Println(Values)
+	}
+
+}
 
 func TodoGroup(router *gin.RouterGroup) {
 	router.POST("/", CreateTodo)
 	router.GET("/:id", GetTodo)
 	router.PUT("/:id", ModfiyTodo)
+	router.DELETE("/:id", DeleteTodo)
+	//router.GET("/list", GetTodolist)
 
 }
+
 func TodolistGroup(router *gin.RouterGroup) {
+
 	router.GET("/", GetTodolist)
+
+}
+func DeleteTodo(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	fmt.Println(id)
+	todo := models.Todo{Id: id}
+
+	todo.DelTodo()
+	c.JSON(http.StatusOK, todo)
 
 }
 func GetTodolist(c *gin.Context) {
@@ -76,7 +109,7 @@ func GetTodo(c *gin.Context) {
 
 }
 
-//tilte이름 비어 있을 때 처리
+//tilte이름 비어 있을 때 처리해야된다.
 func ModfiyTodo(c *gin.Context) {
 	var json Todo
 
@@ -89,9 +122,11 @@ func ModfiyTodo(c *gin.Context) {
 		todo.Id = id
 		fmt.Println(todo)
 		if err := todo.UpdateTodo(); err != nil {
-			c.JSON(http.StatusConflict, gin.H{"Message": err})
+			fmt.Println(err)
+			c.JSON(http.StatusConflict, gin.H{"Message": err.Error()})
+		} else {
+			c.JSON(http.StatusOK, todo)
 		}
-		c.JSON(http.StatusOK, todo)
 	}
 
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"wastest/Todolist/Route"
@@ -12,17 +14,19 @@ func Migrate(db *gorm.DB) {
 	db.AutoMigrate(&models.Todo{})
 }
 
-var router *gin.Engine
-
 func main() {
 	db := common.Init()
 	Migrate(db)
 	defer db.Close()
 
-	r := gin.Default()
+	router := gin.Default()
+	router.Use(static.Serve("/", static.LocalFile("./view", true)))
 
-	v1 := r.Group("/api")
+	router.Use(cors.Default())
+
+	v1 := router.Group("/api")
 	Route.TodoGroup(v1.Group("/todo"))
 	Route.TodolistGroup(v1.Group("/todolist"))
-	r.Run()
+
+	router.Run()
 }
