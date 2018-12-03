@@ -147,9 +147,12 @@ func beforupdatefill(todo *models.Todo) {
 		todo.Title = fill.Title
 	}
 	if len(todo.Children) == 0 {
-		for _, temp := range fill.Children {
-			todo.Children = append(todo.Children, temp)
-		}
+		todo.Children = fill.Children
+
+	}
+	if len(todo.Children) == 1 && todo.Children[0].Id == 0 {
+		todo.Children = fill.Children
+
 	}
 	if todo.Done == "" {
 		todo.Done = fill.Done
