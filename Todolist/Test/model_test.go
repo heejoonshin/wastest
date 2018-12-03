@@ -99,8 +99,8 @@ func TestFailModifyDone(t *testing.T) {
 		t.Error("참조가 있는 작업 생성 오류")
 	}
 
-	data3.Done = "Y"
-	if err := data3.UpdateTodo(); err == nil {
+	data1.Done = "Y"
+	if err := data1.UpdateTodo(); err == nil {
 		t.Error("데이터 수정시 완료 하는 로직 에러: 참조된 작이 끝나지 않은 상황에서 완료로 변경")
 
 	}

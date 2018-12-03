@@ -41,6 +41,9 @@ func (todo *Todo) AfterDelete(scope *gorm.Scope) error {
 	if err := db.Exec("delete from children where todos_id = ? or todo_id=?", deleted_id, deleted_id).Error; err != nil {
 		return err
 	}
+	if err := db.Exec("delete from parents where todos_id = ? or todo_id=?", deleted_id, deleted_id).Error; err != nil {
+		return err
+	}
 	return nil
 }
 func (todo *Todo) DelTodo() error {
@@ -82,14 +85,23 @@ func (todo *Todo) CreateTodo() error {
 	newtodo := Todo{
 		Title: todo.Title,
 	}
+	todo.Done = "N"
+
+	if err := todo.FindAllInfo(); err != nil {
+		return err
+	}
 
 	if err := todo.IsPossibleConnect(); err != nil {
 		return err
 
 	}
+	if err := todo.ispossibleDone(); err != nil {
+		return err
+	}
 	if err := db.Create(&newtodo).Error; err != nil {
 		return err
 	}
+
 	todo.Id = newtodo.Id
 	fmt.Println(newtodo)
 	fmt.Println(todo)
@@ -124,6 +136,9 @@ func (todo *Todo) UpdateTodo() error {
 	origin := Todo{
 		Id: todo.Id,
 	}
+	if err := db.Preload("Parents").Find(&origin, todo.Id).Error; err != nil {
+		return err
+	}
 	if err := db.Preload("Children").Find(&origin, todo.Id).Error; err != nil {
 		return err
 	}
@@ -144,6 +159,7 @@ func (todo *Todo) UpdateTodo() error {
 	for _, do := range addon {
 		newtodo.Children = append(newtodo.Children, do)
 	}
+	newtodo.Parents = origin.Parents
 
 	//디비에 있는 정보로 검색
 	if f := origin.ExistRef(takoff); f == false {
@@ -151,6 +167,9 @@ func (todo *Todo) UpdateTodo() error {
 	}
 	//새롭게 업데이트 될 정보로 검색
 	if err := newtodo.IsPossibleConnect(); err != nil {
+		return err
+	}
+	if err := newtodo.ispossibleDone(); err != nil {
 		return err
 	}
 	if err := db.Model(&Todo{}).Where("id =?", newtodo.Id).Update(&Todo{Title: newtodo.Title, Done: newtodo.Done}).Error; err != nil {
@@ -183,18 +202,6 @@ func (todo *Todo) Diffset(inter map[uint64]bool) []*Todo {
 		}
 	}
 	return ret
-
-}
-
-//해당 작업이 완료 상태가 될수 있는지체크
-func (todo *Todo) CheckDone() (bool, error) {
-	descendant := todo.FindFamiliy("Children")
-	for _, ref := range descendant {
-		if ref.Done == "N" {
-			return false, nil
-		}
-	}
-	return true, nil
 
 }
 
@@ -231,7 +238,7 @@ func (todo *Todo) Connectref() error {
 		if err := db.Model(&Todo{Id: todo.Id}).Association("Children").Append(ref).Error; err != nil {
 			return err
 		}
-		if err := db.Model(&Todo{Id: ref.Id}).Association("Parents").Append(todo.Id).Error; err != nil {
+		if err := db.Model(&Todo{Id: ref.Id}).Association("Parents").Append(&Todo{Id: todo.Id}).Error; err != nil {
 			return err
 		}
 
@@ -252,7 +259,7 @@ func (todo *Todo) Disconnecref(reflist []*Todo) error {
 			if err := db.Model(&Todo{Id: todo.Id}).Association("Children").Delete(ref).Error; err != nil {
 				return err
 			}
-			if err := db.Model(&Todo{Id: ref.Id}).Association("Children").Delete(todo.Id).Error; err != nil {
+			if err := db.Model(&Todo{Id: ref.Id}).Association("Parents").Delete(&Todo{Id: todo.Id}).Error; err != nil {
 				return err
 			}
 
@@ -287,28 +294,35 @@ func (todo *Todo) SameCountRefTodo(reflist []*Todo) (err error) {
 
 }
 
+//완료여부를 수정할 수 있는지
+func (todo *Todo) ispossibleDone() error {
+	for _, p := range todo.Parents {
+		if todo.Done == "Y" && p.Done == "N" {
+			return errors.New("참조하려는 작업이 완료된 후에 완료할 수 있습니다.")
+		}
+	}
+	for _, c := range todo.Children {
+		if todo.Done == "N" && c.Done == "Y" {
+			return errors.New("잘못된 참조 역영이 있습니다.")
+
+		}
+	}
+	return nil
+
+}
+
 //참조가 가능한지 확인 하는 메소드
 func (todo *Todo) IsPossibleConnect() error {
 
 	if err := todo.SameCountRefTodo(todo.Children); err != nil {
 		return err
 	}
-	ancestors := todo.FindFamiliy("Parents")
-	for _, parents_ref := range ancestors {
-		if todo.Done == "N" && parents_ref.Done == "Y" {
-			return errors.New("(부모)참조하려는 작업이 완료된 후에 완료할 수 있습니다.")
-
-		}
-	}
 
 	for _, ref := range todo.Children {
 		descendant := ref.FindFamiliy("Children")
 
 		for _, child_ref := range descendant {
-			if todo.Done == "Y" && child_ref.Done == "N" {
-				return errors.New("(자식)참조하려는 작업이 완료된 후에 완료할 수 있습니다.")
 
-			}
 			if todo.Id == child_ref.Id {
 				return errors.New("사이클이 존재합니다. 영원히 일을 끝낼 수 없습니다.")
 			}
