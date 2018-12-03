@@ -101,7 +101,7 @@ func TestFailModifyDone(t *testing.T) {
 
 	data1.Done = "Y"
 	if err := data1.UpdateTodo(); err == nil {
-		t.Error("데이터 수정시 완료 하는 로직 에러: 참조된 작이 끝나지 않은 상황에서 완료로 변경")
+		t.Error("데이터 수정시 완료 하는 로직 에러: 참조된 작업이 끝나지 않은 상황에서 완료로 변경")
 
 	}
 

@@ -303,7 +303,7 @@ func (todo *Todo) SameCountRefTodo(reflist []*Todo) (err error) {
 func (todo *Todo) ispossibleDone() error {
 	for _, p := range todo.Parents {
 		if todo.Done == "Y" && p.Done == "N" {
-			return errors.New("참조하려는 작업이 완료된 후에 완료할 수 있습니다.")
+			return errors.New("참조한 완료된 후에 완료할 수 있습니다.")
 		}
 	}
 	for _, c := range todo.Children {
