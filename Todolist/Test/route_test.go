@@ -2,10 +2,10 @@ package Test
 
 import (
 	"fmt"
+	"github.com/heejoonshin/wastest/Todolist/Route"
+	"github.com/heejoonshin/wastest/Todolist/models"
 	"testing"
 	"time"
-	"wastest/Todolist/Route"
-	"wastest/Todolist/models"
 )
 
 func TestConvert(t *testing.T) {

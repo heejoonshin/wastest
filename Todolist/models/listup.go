@@ -1,7 +1,7 @@
 package models
 
 import (
-	"wastest/common"
+	"github.com/heejoonshin/wastest/common"
 )
 
 //페이징 처리

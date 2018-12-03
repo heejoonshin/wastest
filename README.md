@@ -3,7 +3,7 @@
 
 Go 언어의 1.11.2번전 환경에서 작성 되었습니다.
 Go 패스에 해당 git을 클론시킨 후
-
+cd 
 cd $GOPATH/src/wastest/
 go build
 $GOPATH/wastest

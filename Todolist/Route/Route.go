@@ -3,10 +3,10 @@ package Route
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/heejoonshin/wastest/Todolist/models"
 	"net/http"
 	"strconv"
 	"strings"
-	"wastest/Todolist/models"
 )
 
 type Todo struct {

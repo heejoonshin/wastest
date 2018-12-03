@@ -3,10 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"github.com/heejoonshin/wastest/common"
 	"github.com/jinzhu/gorm"
 	"reflect"
 	"time"
-	"wastest/common"
 )
 
 type Todo struct {

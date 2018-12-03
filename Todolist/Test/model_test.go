@@ -3,10 +3,10 @@ package Test
 import (
 	"errors"
 	"fmt"
+	"github.com/heejoonshin/wastest/Todolist/models"
+	"github.com/heejoonshin/wastest/common"
 	"strconv"
 	"testing"
-	"wastest/Todolist/models"
-	"wastest/common"
 )
 
 func Init() {

@@ -4,10 +4,10 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/heejoonshin/wastest/Todolist/Route"
+	"github.com/heejoonshin/wastest/Todolist/models"
+	"github.com/heejoonshin/wastest/common"
 	"github.com/jinzhu/gorm"
-	"wastest/Todolist/Route"
-	"wastest/Todolist/models"
-	"wastest/common"
 )
 
 func Migrate(db *gorm.DB) {
