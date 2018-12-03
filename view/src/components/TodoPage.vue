@@ -11,7 +11,7 @@
 
       </template>
       <template slot="delete" slot-scope="row">
-        <b-button size="lg"  class="mr-3" type="button" @click="deleteTodo(row.item.Id)">
+        <b-button size="lg"  class="mr-3" type="button" @click="deleteTodo(row.item.Id)" @click.stop="reload_data">
           삭제
         </b-button>
 
@@ -47,7 +47,7 @@
 
 
           </b-row>
-          <b-button size="sm" @click="row.toggleDetails" @click.stop="modifyTodo({title:M_title,children:M_ref,done:selected},row.item.Id)"  >수정 완료</b-button>
+          <b-button size="sm" @click="reload_data" @click.stop="modifyTodo({title:M_title,children:M_ref,done:selected},row.item.Id)"  >수정 완료</b-button>
 
         </b-card>
       </template>
@@ -127,6 +127,12 @@
       }
 
     },
+    created:function () {
+      this.$nextTick(function (){
+
+      })
+    },
+
     methods: {
 
 
@@ -213,6 +219,9 @@
           this.name = null
         }
       },
+      reload_data(){
+        window.location.reload()
+      },
       modifyTodo(params,id){
         console.log(params)
         if(params != null){
@@ -252,19 +261,17 @@
 
             for (var i = 0; i < this.todolist.length; i++){
 
-              if(this.todolist[i].Id == result.data.Id)
-              {
+              if(this.todolist[i].Id == result.data.Id) {
                 vm.todolist[i] = result.data;
 
                 console.log(vm.todolist[i]);
-
-
 
 
                 break;
               }
 
             }
+
 
 
           }).catch(e=>{

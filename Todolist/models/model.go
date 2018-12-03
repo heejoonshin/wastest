@@ -70,9 +70,11 @@ func (todo *Todo) FindAllInfo() error {
 	db := common.GetDB()
 
 	idxs := make([]uint64, 0)
+
 	for _, child := range todo.Children {
 		idxs = append(idxs, child.Id)
 	}
+
 	if err := db.Find(&todo.Children, "id in (?)", idxs).Error; err != nil {
 		return err
 	}
@@ -86,6 +88,9 @@ func (todo *Todo) CreateTodo() error {
 		Title: todo.Title,
 	}
 	todo.Done = "N"
+	if err := todo.SameCountRefTodo(todo.Children); err != nil {
+		return err
+	}
 
 	if err := todo.FindAllInfo(); err != nil {
 		return err
