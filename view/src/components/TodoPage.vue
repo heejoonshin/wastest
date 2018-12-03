@@ -64,7 +64,7 @@
              v-model="ref">
       <span class="input-group-btn">
 		<button class="btn btn-default" type="button"
-            @click="createTodo({title:name,children:ref})">추가</button>
+            @click="createTodo({title:name,children:ref})" @click.stop="reload_data">추가</button>
 	</span>
     </div>
   </div>
