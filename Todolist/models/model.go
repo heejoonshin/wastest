@@ -52,25 +52,14 @@ func (todo *Todo) DelTodo() error {
 
 }
 
-//해당 todo에 연결된 모든 자식 노드의 정보를 받아오는 함수
-func (todo *Todo) GetReflist() error {
-	db := common.GetDB()
-
-	err := db.Preload("Reflist").Find(&todo, "id =?", todo.Id).Error
-	todo.FindAllInfo()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (todo *Todo) FindById() error {
 	db := common.GetDB()
 	err := db.Preload("Children").Find(&todo, "id =?", todo.Id).Error
-	todo.FindAllInfo()
 	if err != nil {
 		return err
 	}
+	todo.FindAllInfo()
+
 	return nil
 }
 func (todo *Todo) FindAllInfo() error {

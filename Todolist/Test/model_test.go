@@ -1,8 +1,6 @@
 package Test
 
 import (
-	//"fmt"
-
 	"errors"
 	"fmt"
 	"strconv"
@@ -168,9 +166,17 @@ func TestFailModifyCycle(t *testing.T) {
 
 func TestDel(t *testing.T) {
 	Init()
+	tc := models.Todo{Title: "test1"}
 
-	test := &models.Todo{
-		Id: 6,
+	if err := testModletitle(&tc, "test1"); err != nil {
+		t.Error(err)
 	}
-	test.DelTodo()
+	id := tc.Id
+	if err := tc.DelTodo(); err != nil {
+		t.Error(err)
+	}
+	check := models.Todo{Id: id}
+	if err := check.FindById(); err == nil {
+		t.Error("삭제 에러")
+	}
 }

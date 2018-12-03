@@ -2,6 +2,7 @@
   <div class="container">
     <h2>Todo List</h2>
 
+
     <b-table :items="todolist" :fields="fields" >
       <template slot="modify" slot-scope="row">
         <b-button size="lg" @click.stop="row.toggleDetails" class="mr-2">
@@ -46,13 +47,13 @@
 
 
           </b-row>
-          <b-button size="sm" @click="modifyTodo({title:M_title,children:M_ref,done:selected},row.item.Id)">수정 완료</b-button>
+          <b-button size="sm" @click.stop="modifyTodo({title:M_title,children:M_ref,done:selected},row.item.Id)"  >수정 완료</b-button>
 
         </b-card>
       </template>
 
     </b-table>
-
+    <div id="example">{{ message }}</div>
     <b-pagination size="md" :total-rows="totaldata" :per-page="limit" :limit="10" v-model="currentPage" @input="getTodolist({page:currentPage})"></b-pagination>
     <div class="input-group" style="margin-bottom:10px;">
       <input type="text" class="form-control"
@@ -121,7 +122,8 @@
           { text: '완료', value: 'Y' },
           { text: '미완료', value: 'N' },
 
-        ]
+        ],
+        page : 1
       }
 
     },
@@ -170,21 +172,39 @@
 
       },
       createTodo(params){
+        console.log(params)
+
 
         if(params.title != null){
           var vm = this;
           if(params.children != null){
-            params.children.trim();
+            params.children = params.children.trim();
+
             params.children = params.children.split(' ')
-            for(var i = 0; i < params.children.length; i++){
-              params.children[i] = parseInt(params.children[i])
+
+            if(params.children != "") {
+              for (var i = 0; i < params.children.length; i++) {
+                params.children[i] = parseInt(params.children[i])
+                console.log(typeof params.children[i]);
+
+
+              }
+            }else{
+              params.children=null
+
             }
+
           }
           console.log(params);
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
           this.$http.post('http://localhost:8080/api/todo/',params).then((result) => {
             console.log(result);
             vm.todolist.push(result.data)
+          }).catch((e)=>{
+            module.status = e.response.data.status
+            vm.error=e.response.data
+            //console.log(e.response.data)
+
           });
           this.name = null
         }
@@ -207,17 +227,27 @@
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
           this.$http.put('http://localhost:8080/api/todo/'+id,params).then((result) => {
             console.log(result);
+
             for (var i = 0; i < this.todolist.length; i++){
+
               if(this.todolist[i].Id == result.data.Id)
               {
-                vm.todolist[i] = result;
+                vm.todolist[i] = result.data;
 
                 console.log(vm.todolist[i]);
 
-                break;
 
+
+
+                break;
               }
+              this.$el.textContent
             }
+
+
+          }).catch(e=>{
+            this.error(e)
+
           })
         }
       }
