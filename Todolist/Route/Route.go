@@ -26,6 +26,7 @@ type TodoListStruct struct {
 	Todolist  []*ViewStruct
 	Totaldata int
 	Limit     int
+	Page      int
 }
 
 func TodoGroup(router *gin.RouterGroup) {
@@ -94,7 +95,7 @@ func GetTodolist(c *gin.Context) {
 
 	}
 
-	res := TodoListStruct{Todolist: todliststr, Totaldata: todolist.Totaldata, Limit: todolist.Limit}
+	res := TodoListStruct{Todolist: todliststr, Totaldata: todolist.Totaldata, Limit: todolist.Limit, Page: todolist.Page}
 
 	c.JSON(http.StatusOK, res)
 
@@ -138,6 +139,23 @@ func GetTodo(c *gin.Context) {
 	}
 
 }
+func beforupdatefill(todo *models.Todo) {
+	fill := models.Todo{Id: todo.Id}
+	err := fill.FindById()
+	fmt.Println(err)
+	if todo.Title == "" {
+		todo.Title = fill.Title
+	}
+	if len(todo.Children) == 0 {
+		for _, temp := range fill.Children {
+			todo.Children = append(todo.Children, temp)
+		}
+	}
+	if todo.Done == "" {
+		todo.Done = fill.Done
+	}
+
+}
 
 //tilte이름 비어 있을 때 처리해야된다.
 func ModfiyTodo(c *gin.Context) {
@@ -150,6 +168,7 @@ func ModfiyTodo(c *gin.Context) {
 		c.BindJSON(&json)
 		todo := json.ConvertToModel()
 		todo.Id = id
+		beforupdatefill(&todo)
 		fmt.Println(todo)
 		if err := todo.UpdateTodo(); err != nil {
 			fmt.Println(err)

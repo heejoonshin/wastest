@@ -47,7 +47,7 @@
 
 
           </b-row>
-          <b-button size="sm" @click.stop="modifyTodo({title:M_title,children:M_ref,done:selected},row.item.Id)"  >수정 완료</b-button>
+          <b-button size="sm" @click="row.toggleDetails" @click.stop="modifyTodo({title:M_title,children:M_ref,done:selected},row.item.Id)"  >수정 완료</b-button>
 
         </b-card>
       </template>
@@ -148,6 +148,9 @@
 
               }
             }
+          }).catch(e=>{
+            alert(e.response.data.Message)
+
           });
           this.name = null
         }
@@ -164,10 +167,12 @@
               this.todolist = result.data.Todolist;
               this.totaldata = result.data.Totaldata;
               this.limit = result.data.Limit
+              this.page = result.data.Page
 
 
             }).catch((error) => {
-            console.log(error)
+            alert(error.response.data.Message)
+
           })
 
       },
@@ -201,15 +206,15 @@
             console.log(result);
             vm.todolist.push(result.data)
           }).catch((e)=>{
-            module.status = e.response.data.status
-            vm.error=e.response.data
-            //console.log(e.response.data)
+            alert(e.response.data.Message)
+
 
           });
           this.name = null
         }
       },
       modifyTodo(params,id){
+        console.log(params)
         if(params != null){
           if(params.title != null){
             let x = params.title.trim()
@@ -217,16 +222,33 @@
               params.title = null
             }
           }
-          if(params.children != null){
-            params.children = params.children.trim().split(" ")
-            for(var i = 0; i < params.children.length; i++){
-              params.children[i] = parseInt(params.children[i])
+          if(params.children != null) {
+            params.children = params.children.trim();
+
+            params.children = params.children.split(' ')
+
+            if (params.children != "") {
+              for (var i = 0; i < params.children.length; i++) {
+                params.children[i] = parseInt(params.children[i])
+                console.log(typeof params.children[i]);
+
+
+              }
+            } else {
+              params.children = null
+
             }
           }
+
           var vm = this;
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
           this.$http.put('http://localhost:8080/api/todo/'+id,params).then((result) => {
             console.log(result);
+            this.$router.go({
+              path: $router.path,
+
+            });
+
 
             for (var i = 0; i < this.todolist.length; i++){
 
@@ -241,12 +263,13 @@
 
                 break;
               }
-              this.$el.textContent
+
             }
 
 
           }).catch(e=>{
-            this.error(e)
+
+            alert(e.response.data.Message)
 
           })
         }

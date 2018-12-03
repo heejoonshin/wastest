@@ -15,6 +15,7 @@ type Todo struct {
 	UpdatedAt time.Time
 	Title     string  `gorm:"type:varchar(1020)"`
 	Done      string  `gorm:"default:'N'"`
+	Parents   []*Todo `gorm:"many2many:parents;association_jointable_foreignkey:todos_id"`
 	Children  []*Todo `gorm:"many2many:children;association_jointable_foreignkey:todos_id"`
 }
 
@@ -230,6 +231,9 @@ func (todo *Todo) Connectref() error {
 		if err := db.Model(&Todo{Id: todo.Id}).Association("Children").Append(ref).Error; err != nil {
 			return err
 		}
+		if err := db.Model(&Todo{Id: ref.Id}).Association("Parents").Append(todo.Id).Error; err != nil {
+			return err
+		}
 
 	}
 
@@ -246,6 +250,9 @@ func (todo *Todo) Disconnecref(reflist []*Todo) error {
 		for _, ref := range reflist {
 
 			if err := db.Model(&Todo{Id: todo.Id}).Association("Children").Delete(ref).Error; err != nil {
+				return err
+			}
+			if err := db.Model(&Todo{Id: ref.Id}).Association("Children").Delete(todo.Id).Error; err != nil {
 				return err
 			}
 
@@ -271,7 +278,7 @@ func (todo *Todo) SameCountRefTodo(reflist []*Todo) (err error) {
 
 		db.Model(&Todo{}).Where("id in (?)", querylist).Count(&qeurycount)
 		if refcount != qeurycount {
-			return errors.New("Not Found Todo")
+			return errors.New("선택한 일정이 존재 하지 않습니다.")
 		}
 	} else {
 		return nil
@@ -286,16 +293,24 @@ func (todo *Todo) IsPossibleConnect() error {
 	if err := todo.SameCountRefTodo(todo.Children); err != nil {
 		return err
 	}
+	ancestors := todo.FindFamiliy("Parents")
+	for _, parents_ref := range ancestors {
+		if todo.Done == "N" && parents_ref.Done == "Y" {
+			return errors.New("(부모)참조하려는 작업이 완료된 후에 완료할 수 있습니다.")
+
+		}
+	}
 
 	for _, ref := range todo.Children {
 		descendant := ref.FindFamiliy("Children")
+
 		for _, child_ref := range descendant {
 			if todo.Done == "Y" && child_ref.Done == "N" {
-				return errors.New("It is not able to be done")
+				return errors.New("(자식)참조하려는 작업이 완료된 후에 완료할 수 있습니다.")
 
 			}
 			if todo.Id == child_ref.Id {
-				return errors.New("It makes a Cycle")
+				return errors.New("사이클이 존재합니다. 영원히 일을 끝낼 수 없습니다.")
 			}
 		}
 	}

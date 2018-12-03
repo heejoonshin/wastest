@@ -14,6 +14,7 @@ type result struct {
 	Todolist  []*Todo
 	Totaldata int
 	Limit     int
+	Page      int
 }
 
 func (pageination *Pageination) Listup() (res result, err error) {
@@ -46,7 +47,7 @@ func (pageination *Pageination) Listup() (res result, err error) {
 		for _, todo := range todolist {
 			todo.FindAllInfo()
 		}
-		res = result{Todolist: todolist, Totaldata: totaldata, Limit: pageination.Limit}
+		res = result{Todolist: todolist, Totaldata: totaldata, Limit: pageination.Limit, Page: pageination.Page}
 		return res, nil
 	}
 
