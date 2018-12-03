@@ -184,7 +184,7 @@
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
           this.$http.post('http://localhost:8080/api/todo/',params).then((result) => {
             console.log(result);
-            vm.todolist(result.data)
+            vm.todolist.push(result.data)
           });
           this.name = null
         }
@@ -210,7 +210,11 @@
             for (var i = 0; i < this.todolist.length; i++){
               if(this.todolist[i].Id == result.data.Id)
               {
-                this.todolist[i] = result
+                vm.todolist[i] = result;
+
+                console.log(vm.todolist[i]);
+
+                break;
 
               }
             }

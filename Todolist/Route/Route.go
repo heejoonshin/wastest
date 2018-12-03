@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"reflect"
 	"strconv"
+	"strings"
 	"wastest/Todolist/models"
 )
 
@@ -22,17 +22,10 @@ type ViewStruct struct {
 	Title     string
 	Done      string
 }
-
-func ModelToView(i interface{}) {
-	rt := reflect.TypeOf(i)
-	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
-		fmt.Println(rt.Elem())
-	} else {
-		Values := reflect.ValueOf(i).Elem()
-
-		fmt.Println(Values)
-	}
-
+type TodoListStruct struct {
+	Todolist  []*ViewStruct
+	Totaldata int
+	Limit     int
 }
 
 func TodoGroup(router *gin.RouterGroup) {
@@ -40,7 +33,6 @@ func TodoGroup(router *gin.RouterGroup) {
 	router.GET("/:id", GetTodo)
 	router.PUT("/:id", ModfiyTodo)
 	router.DELETE("/:id", DeleteTodo)
-	//router.GET("/list", GetTodolist)
 
 }
 
@@ -49,13 +41,35 @@ func TodolistGroup(router *gin.RouterGroup) {
 	router.GET("/", GetTodolist)
 
 }
+
+func ModelToView(todo *models.Todo) (ret *ViewStruct) {
+	childlist := ""
+	ret = &ViewStruct{
+		Id:        fmt.Sprint(todo.Id),
+		CreatedAt: fmt.Sprintf("%d-%d-%d %d:%d:%d", todo.CreatedAt.Year(), todo.CreatedAt.Month(), todo.CreatedAt.Day(), todo.CreatedAt.Hour(), todo.CreatedAt.Minute(), todo.CreatedAt.Second()),
+		UpdatedAt: fmt.Sprintf("%d-%d-%d %d:%d:%d", todo.UpdatedAt.Year(), todo.UpdatedAt.Month(), todo.UpdatedAt.Day(), todo.UpdatedAt.Hour(), todo.UpdatedAt.Minute(), todo.UpdatedAt.Second()),
+		Title:     todo.Title,
+		Done:      todo.Done,
+	}
+	for _, child := range todo.Children {
+		childlist = childlist + "@" + fmt.Sprint(child.Id) + " "
+	}
+	childlist = strings.TrimSpace(childlist)
+	ret.Title += " " + childlist
+
+	return
+}
 func DeleteTodo(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	fmt.Println(id)
 	todo := models.Todo{Id: id}
 
-	todo.DelTodo()
-	c.JSON(http.StatusOK, todo)
+	if err := todo.DelTodo(); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"Message": err.Error()})
+
+	} else {
+		c.JSON(http.StatusOK, todo)
+	}
 
 }
 func GetTodolist(c *gin.Context) {
@@ -74,8 +88,15 @@ func GetTodolist(c *gin.Context) {
 
 	//fmt.Println(listquery)
 	todolist, _ := listquery.Listup()
+	todliststr := make([]*ViewStruct, 0)
+	for _, todo := range todolist.Todolist {
+		todliststr = append(todliststr, ModelToView(todo))
 
-	c.JSON(http.StatusOK, todolist)
+	}
+
+	res := TodoListStruct{Todolist: todliststr, Totaldata: todolist.Totaldata, Limit: todolist.Limit}
+
+	c.JSON(http.StatusOK, res)
 
 }
 
@@ -92,9 +113,14 @@ func CreateTodo(c *gin.Context) {
 		c.BindJSON(&json)
 		todo := json.ConvertToModel()
 		if err := todo.CreateTodo(); err != nil {
+			fmt.Println(err)
+			c.JSON(http.StatusConflict, gin.H{"Message": err.Error()})
 
+		} else {
+			todo.FindById()
+			c.JSON(http.StatusOK, ModelToView(&todo))
 		}
-		c.JSON(http.StatusOK, todo)
+
 	}
 
 }
@@ -104,8 +130,12 @@ func GetTodo(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	fmt.Println(id)
 	Q := models.Todo{Id: id}
-	Q.FindById()
-	c.JSON(http.StatusOK, Q)
+	if err := Q.FindById(); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"Message": err.Error()})
+
+	} else {
+		c.JSON(http.StatusOK, ModelToView(&Q))
+	}
 
 }
 
@@ -125,7 +155,8 @@ func ModfiyTodo(c *gin.Context) {
 			fmt.Println(err)
 			c.JSON(http.StatusConflict, gin.H{"Message": err.Error()})
 		} else {
-			c.JSON(http.StatusOK, todo)
+			todo.FindById()
+			c.JSON(http.StatusOK, ModelToView(&todo))
 		}
 	}
 

@@ -13,11 +13,9 @@ type Todo struct {
 	Id        uint64 `gorm:"AUTO_INCREMENT;primary_key"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Title     string `gorm:"type:varchar(1020)"`
-	Done      string `gorm:"default:'N'"`
-
-	//Parents  []*Todo `gorm:"many2many:parents;association_jointable_foreignkey:todos_id"`
-	Children []*Todo `gorm:"many2many:children;association_jointable_foreignkey:todos_id"`
+	Title     string  `gorm:"type:varchar(1020)"`
+	Done      string  `gorm:"default:'N'"`
+	Children  []*Todo `gorm:"many2many:children;association_jointable_foreignkey:todos_id"`
 }
 
 func (todo *Todo) BeforeCreate(scope *gorm.Scope) error {
@@ -94,15 +92,13 @@ func (todo *Todo) CreateTodo() error {
 	newtodo := Todo{
 		Title: todo.Title,
 	}
-	if f, err := todo.SameCountRefTodo(todo.Children); f == false {
+
+	if err := todo.IsPossibleConnect(); err != nil {
 		return err
+
 	}
 	if err := db.Create(&newtodo).Error; err != nil {
 		return err
-	}
-	if f, _ := todo.IsPossibleConnect(); f == false {
-		return errors.New("invalid value")
-
 	}
 	todo.Id = newtodo.Id
 	fmt.Println(newtodo)
@@ -164,7 +160,7 @@ func (todo *Todo) UpdateTodo() error {
 		return errors.New("?")
 	}
 	//새롭게 업데이트 될 정보로 검색
-	if _, err := newtodo.IsPossibleConnect(); err != nil {
+	if err := newtodo.IsPossibleConnect(); err != nil {
 		return err
 	}
 	if err := db.Model(&Todo{}).Where("id =?", newtodo.Id).Update(&Todo{Title: newtodo.Title, Done: newtodo.Done}).Error; err != nil {
@@ -272,7 +268,7 @@ func (todo *Todo) Disconnecref(reflist []*Todo) error {
 }
 
 // 참조 하는 작업이 DB에 존재하는지 확인 하는 메소드
-func (todo *Todo) SameCountRefTodo(reflist []*Todo) (res bool, err error) {
+func (todo *Todo) SameCountRefTodo(reflist []*Todo) (err error) {
 	db := common.GetDB()
 
 	var qeurycount int
@@ -286,46 +282,35 @@ func (todo *Todo) SameCountRefTodo(reflist []*Todo) (res bool, err error) {
 
 		db.Model(&Todo{}).Where("id in (?)", querylist).Count(&qeurycount)
 		if refcount != qeurycount {
-			return false, errors.New("Invaild ref")
+			return errors.New("Not Found Todo")
 		}
 	} else {
-		return true, nil
+		return nil
 	}
-	return true, nil
+	return nil
 
 }
 
 //참조가 가능한지 확인 하는 메소드
-func (todo *Todo) IsPossibleConnect() (res bool, err error) {
+func (todo *Todo) IsPossibleConnect() error {
 
-	children := todo.FindFamiliy("Children")
-
-	if res, err = todo.SameCountRefTodo(todo.Children); res == false {
-		return
+	if err := todo.SameCountRefTodo(todo.Children); err != nil {
+		return err
 	}
 
-	res = true
 	for _, ref := range todo.Children {
 		descendant := ref.FindFamiliy("Children")
-		inter := intersection(children, descendant)
-		if len(inter) > 0 {
-			return false, errors.New("It Makes Cycle")
-		}
-		if todo.Done == "Y" {
-			for _, child_ref := range descendant {
-				if child_ref.Done == "N" {
-					return false, errors.New("It is not able to be done")
+		for _, child_ref := range descendant {
+			if todo.Done == "Y" && child_ref.Done == "N" {
+				return errors.New("It is not able to be done")
 
-				}
+			}
+			if todo.Id == child_ref.Id {
+				return errors.New("It makes a Cycle")
 			}
 		}
-
-		for _, child_ref := range descendant {
-			children = append(children, child_ref)
-		}
-
 	}
-	return res, nil
+	return nil
 
 }
 
@@ -375,7 +360,7 @@ func (todo *Todo) FindFamiliy(familytype string) (res []*Todo) {
 
 //교집합을 구하는 함수
 func intersection(a, b []*Todo) (inter []*Todo) {
-	// interacting on the smallest list first can potentailly be faster...but not by much, worse case is the same
+
 	low, high := a, b
 	if len(a) > len(b) {
 		low = b
@@ -385,23 +370,23 @@ func intersection(a, b []*Todo) (inter []*Todo) {
 	done := false
 	for i, l := range low {
 		for j, h := range high {
-			// get future index values
+
 			f1 := i + 1
 			f2 := j + 1
 			if l.Id == h.Id {
 				inter = append(inter, h)
 				if f1 < len(low) && f2 < len(high) {
-					// if the future values aren't the same then that's the end of the intersection
+
 					if low[f1] != high[f2] {
 						done = true
 					}
 				}
-				// we don't want to interate on the entire list everytime, so remove the parts we already looped on will make it faster each pass
+
 				high = high[:j+copy(high[j:], high[j+1:])]
 				break
 			}
 		}
-		// nothing in the future so we are done
+
 		if done {
 			break
 		}

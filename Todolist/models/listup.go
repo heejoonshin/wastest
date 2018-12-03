@@ -33,20 +33,20 @@ func (pageination *Pageination) Listup() (res result, err error) {
 	}
 
 	err = db.Preload("Children").Offset(offset).Limit(pageination.Limit).Order(pageination.Order).Find(&todolist).Error
+	if err != nil {
+		return
+	}
 	var totaldata int
 	var temp []*Todo
 	db.Find(&temp).Count(&totaldata)
-
 	//totalpage /=pageination.Limit
 	if err != nil {
 		return res, err
 	} else {
-
 		for _, todo := range todolist {
 			todo.FindAllInfo()
 		}
 		res = result{Todolist: todolist, Totaldata: totaldata, Limit: pageination.Limit}
-
 		return res, nil
 	}
 

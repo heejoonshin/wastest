@@ -3,6 +3,7 @@ package Test
 import (
 	"fmt"
 	"testing"
+	"time"
 	"wastest/Todolist/Route"
 	"wastest/Todolist/models"
 )
@@ -13,10 +14,9 @@ func TestConvert(t *testing.T) {
 
 }
 func TestModelToView(t *testing.T) {
-	var A []*models.Todo
-	A = append(A, &models.Todo{Id: 1})
-	Route.ModelToView(&A)
-	B := models.Todo{Id: 1}
-	Route.ModelToView(&B)
+	A := &models.Todo{Id: 1, CreatedAt: time.Now(), UpdatedAt: time.Now(), Done: "Y", Title: "test", Children: []*models.Todo{{Id: 3}}}
+	fmt.Println(A)
+
+	fmt.Println(Route.ModelToView(A))
 
 }
