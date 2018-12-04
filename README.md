@@ -5,7 +5,13 @@
 <pre><code>
 Go get github.com/heejoonshin/wastest
 cd $GOPATH/github.com/heejoonshin/wastest
+이동후
+
 go build
+./wastest
+
+또는 
+
 go run server.go
 
 </code></pre>
