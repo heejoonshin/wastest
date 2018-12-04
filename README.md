@@ -69,7 +69,7 @@ GET | /todo | x | Json {Id: 일 아이디, Title:일 제목 , Children:[참조�
 POST| /todo/ |Json {Title:일 제목 , Children:[참조건 리스트]} | Json {Id: 일 아이디, Title:일 제목 , Children:[참조건 리스트]}|
 PUT|/todo/:id | Json{Title:일 제목 (비워있을경우 기존 데이터) , Children:[바뀔 참조 리스트 ,-1입력시 전체 삭제],Done:완료여부(N/Y)|{Id: 일 아이디, Title:일 제목 , Children:[참조건 리스트]}|
 DELETE|/todo/:id |Json{Id :삭제할 아이디}|Json {Id: 일 아이디, Title:일 제목 , Children:[참조건 리스트]}|
-GET|/todolist?| Querystring{limit:리턴받을 리스트 수 (기본 10개),page: 조회할 페이지(기본 1), order:recent(최신순) or done(완료순) or id(기본값 id)|Json [{Id: 일 아이디, Title:일 제목 @참조ID,CreatedAt:작성날짜,UpdatedAt:수정 날, Children:[참조건 리스트]}]
+GET|/todolist?| Querystring{limit:리턴받을 리스트 수 (기본 10개),page: 조회할 페이지(기본 1), order:recent(최신순) or done(완료순) or id(기본값 id)|Json {[{Id: 일 아이디, Title:일 제목 @참조ID,CreatedAt:작성날짜,UpdatedAt:수정 날, Children:[참조건 리스트]}],Totaldata:총데이터 개수,Limit : 리스트에 나올 개수 , page:현재 페이지}
 
 
  문제 해결 전략
