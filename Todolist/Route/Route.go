@@ -151,7 +151,7 @@ func beforupdatefill(todo *models.Todo) {
 
 	}
 	if len(todo.Children) == 1 && todo.Children[0].Id == 0 {
-		todo.Children = fill.Children
+		todo.Children = make([]*models.Todo, 0)
 
 	}
 	if todo.Done == "" {

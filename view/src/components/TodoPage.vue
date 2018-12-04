@@ -21,15 +21,15 @@
         <b-card>
           <b-row class="mb-2">
             <b-col sm="3" class="text-sm-right">
-              <input type="text" class="form-control"
-                     placeholder="할일을 입력하세요"
-                     v-model="M_title"></b-col>
+            <input type="text" class="form-control"
+                   placeholder="할일을 입력하세요"
+                   v-model="M_title"></b-col>
           </b-row>
           <b-row class="mb-2">
             <b-col sm="3" class="text-sm-right">
-              <input type="text" class="form-control"
-                     placeholder="참조할 일을 입력하세요 ex: 1 2 3 1번과 2번과 3번이 참조"
-                     v-model="M_ref"></b-col>
+            <input type="text" class="form-control"
+                   placeholder="참조할 일을 입력하세요 ex: 1 2 3 1번과 2번과 3번이 참조"
+                   v-model="M_ref"></b-col>
           </b-row>
           <b-row class="mb-2">
             <b-col sm="3" class="text-sm-right">
@@ -165,21 +165,21 @@
 
 
 
-        const baseURI = 'http://localhost:8080';
-        this.$http.get(baseURI + "/api/todolist/", {
-          params
-        })
-          .then((result) => {
-            this.todolist = result.data.Todolist;
-            this.totaldata = result.data.Totaldata;
-            this.limit = result.data.Limit
-            this.page = result.data.Page
+          const baseURI = 'http://localhost:8080';
+          this.$http.get(baseURI + "/api/todolist/", {
+            params
+          })
+            .then((result) => {
+              this.todolist = result.data.Todolist;
+              this.totaldata = result.data.Totaldata;
+              this.limit = result.data.Limit
+              this.page = result.data.Page
 
 
-          }).catch((error) => {
-          alert(error.response.data.Message)
+            }).catch((error) => {
+            alert(error.response.data.Message)
 
-        })
+          })
 
       },
       createTodo(params){
@@ -220,6 +220,7 @@
         }
       },
       reload_data(){
+        
         window.location.reload()
       },
       modifyTodo(params,id){
