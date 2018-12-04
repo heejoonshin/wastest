@@ -5,6 +5,7 @@
 <pre><code>
 Go get github.com/heejoonshin/wastest
 cd $GOPATH/github.com/heejoonshin/wastest
+go build
 go run server.go
 
 </code></pre>
