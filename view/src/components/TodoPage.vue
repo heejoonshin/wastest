@@ -74,6 +74,7 @@
 <script>
 
 
+
   export default {
 
 
@@ -123,7 +124,8 @@
           { text: '미완료', value: 'N' },
 
         ],
-        page : 1
+        page : 1,
+
       }
 
     },
@@ -139,24 +141,19 @@
 
 
       deleteTodo(id) {
-
         if(id != null){
           var vm = this;
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
           this.$http.delete('http://localhost:8080/api/todo/'+id).then((result) => {
             console.log(result);
             for (var i = 0; i < this.todolist.length; i++){
-
-
               if(this.todolist[i].Id == result.data.Id)
               {
                 this.todolist.splice(i,1)
-
               }
             }
           }).catch(e=>{
             alert(e.response.data.Message)
-
           });
           this.name = null
         }
@@ -172,8 +169,10 @@
             .then((result) => {
               this.todolist = result.data.Todolist;
               this.totaldata = result.data.Totaldata;
-              this.limit = result.data.Limit
-              this.page = result.data.Page
+              this.limit = result.data.Limit;
+              this.page = result.data.Page;
+
+
 
 
             }).catch((error) => {
@@ -182,29 +181,22 @@
           })
 
       },
+
       createTodo(params){
         console.log(params)
-
-
         if(params.title != null){
           var vm = this;
           if(params.children != null){
             params.children = params.children.trim();
-
             params.children = params.children.split(' ')
-
             if(params.children != "") {
               for (var i = 0; i < params.children.length; i++) {
                 params.children[i] = parseInt(params.children[i])
                 console.log(typeof params.children[i]);
-
-
               }
             }else{
               params.children=null
-
             }
-
           }
           console.log(params);
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
@@ -213,15 +205,13 @@
             vm.todolist.push(result.data)
           }).catch((e)=>{
             alert(e.response.data.Message)
-
-
           });
           this.name = null
         }
       },
       reload_data(){
-        
-        window.location.reload()
+
+        //window.location.reload()
       },
       modifyTodo(params,id){
         console.log(params)
@@ -253,33 +243,15 @@
           var vm = this;
           this.$http.defaults.headers.post['Content-Type'] = 'application/json';
           this.$http.put('http://localhost:8080/api/todo/'+id,params).then((result) => {
-            console.log(result);
-            this.$router.go({
-              path: $router.path,
-
-            });
-
-
-            for (var i = 0; i < this.todolist.length; i++){
-
-              if(this.todolist[i].Id == result.data.Id) {
-                vm.todolist[i] = result.data;
-
-                console.log(vm.todolist[i]);
-
-
-                break;
-              }
-
-            }
-
-
-
+            console.log("_______________")
+            //console.log(result.data);
+            this.getTodolist(params={"page":this.page})
           }).catch(e=>{
 
             alert(e.response.data.Message)
 
           })
+
         }
       }
 
