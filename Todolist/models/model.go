@@ -147,6 +147,8 @@ func (todo *Todo) UpdateTodo() error {
 	if err := db.Preload("Children").Find(&origin, todo.Id).Error; err != nil {
 		return err
 	}
+	//바뀔 데이터중 삭제할 참조 데이터와 남겨둘 참조 데이터를 구하는 로직
+	//바꾸려는 데이터에서 교집합을 빼면 추가될 데이터, 기존의 있는 데이터에서 교집합을 빼면 삭제될 데이터
 	inter := intersection(todo.Children, origin.Children)
 	intermap := TodoListToMap(inter)
 	takoff := origin.Diffset(intermap)
@@ -158,6 +160,7 @@ func (todo *Todo) UpdateTodo() error {
 		Title: todo.Title,
 		Done:  todo.Done,
 	}
+
 	for _, do := range inter {
 		newtodo.Children = append(newtodo.Children, do)
 	}
@@ -301,14 +304,16 @@ func (todo *Todo) SameCountRefTodo(reflist []*Todo) (err error) {
 
 //완료여부를 수정할 수 있는지
 func (todo *Todo) ispossibleDone() error {
+	//현재 작업을 N-> Y로 바꿀 때 부모의 작업이 N인 경우가 있으면 안된다.
 	for _, p := range todo.Parents {
 		if todo.Done == "Y" && p.Done == "N" {
 			return errors.New("참조한 완료된 후에 완료할 수 있습니다.")
 		}
 	}
+	//현재 작업을 Y -> N로 바꿀때 자식이 Y인 경우가 있으면 안되다.
 	for _, c := range todo.Children {
 		if todo.Done == "N" && c.Done == "Y" {
-			return errors.New("잘못된 참조 역영이 있습니다.")
+			return errors.New("잘못된 참조 영역이 있습니다.")
 
 		}
 	}
