@@ -43,6 +43,7 @@ func TodolistGroup(router *gin.RouterGroup) {
 
 }
 
+//프론트에서 보여질 값으로 변환 하는 함수
 func ModelToView(todo *models.Todo) (ret *ViewStruct) {
 	childlist := ""
 	ret = &ViewStruct{
@@ -139,17 +140,22 @@ func GetTodo(c *gin.Context) {
 	}
 
 }
+
+//업데이트 요청시 조건을 처리하는 함수
 func beforupdatefill(todo *models.Todo) {
 	fill := models.Todo{Id: todo.Id}
 	err := fill.FindById()
 	fmt.Println(err)
+	//할일 이름이 비워 있을경우 디비 정보와 일치 시킨다.
 	if todo.Title == "" {
 		todo.Title = fill.Title
 	}
+	//참조 하는 부분이 비워져 있을 경우 디비 정보와 일치 시킨다.
 	if len(todo.Children) == 0 {
 		todo.Children = fill.Children
 
 	}
+	//참조하는 값이 0이면 전체 삭제할 수 있도록 한다. 빈 참조리스트를 선언한다.
 	if len(todo.Children) == 1 && todo.Children[0].Id == 0 {
 		todo.Children = make([]*models.Todo, 0)
 

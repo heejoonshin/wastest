@@ -20,6 +20,7 @@ type result struct {
 func (pageination *Pageination) Listup() (res result, err error) {
 
 	db := common.GetDB()
+	//이전 페이지의 리스트 수를 구하는 부분
 	offset := pageination.Limit * (pageination.Page - 1)
 	var todolist []*Todo
 

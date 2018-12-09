@@ -151,7 +151,9 @@ func (todo *Todo) UpdateTodo() error {
 	//바꾸려는 데이터에서 교집합을 빼면 추가될 데이터, 기존의 있는 데이터에서 교집합을 빼면 삭제될 데이터
 	inter := intersection(todo.Children, origin.Children)
 	intermap := TodoListToMap(inter)
+	//db에 있는 정보에서 교집합을 빼는 부분
 	takoff := origin.Diffset(intermap)
+	//바뀔 정보에서 교집합을 빼서 새롭게 참조되는 참조를 추가 하는 부분
 	addon := todo.Diffset(intermap)
 
 	newtodo := Todo{
