@@ -88,28 +88,34 @@ func (todo *Todo) CreateTodo() error {
 		Title: todo.Title,
 	}
 	todo.Done = "N"
+	//데이터 베이스에 참조 하려는 일의 아이디가 있는지 확인
 	if err := todo.SameCountRefTodo(todo.Children); err != nil {
 		return err
 	}
-
+	//중복로직 (구현 실수)
 	if err := todo.FindAllInfo(); err != nil {
 		return err
 	}
 
+	//참조를 걸수 있는지 확인 하는 로직
 	if err := todo.IsPossibleConnect(); err != nil {
 		return err
 
 	}
+	//완료를 할 수 있는 로직
 	if err := todo.ispossibleDone(); err != nil {
 		return err
 	}
+	//실제로 데이터 베이스에 데이터를 생성 하는 로직
 	if err := db.Create(&newtodo).Error; err != nil {
 		return err
 	}
 
+	// 데이터를 디비에 생성하면 아이디를 얻을 수 있다.
 	todo.Id = newtodo.Id
 	fmt.Println(newtodo)
 	fmt.Println(todo)
+	//참조된 일을 연결
 	todo.Connectref()
 
 	db.Preload("Children").Find(&todo, "id =?", todo.Id)
@@ -326,6 +332,7 @@ func (todo *Todo) ispossibleDone() error {
 //참조가 가능한지 확인 하는 메소드
 func (todo *Todo) IsPossibleConnect() error {
 
+	//참조할 데이터가 존재하는지 확인 하는 로직
 	if err := todo.SameCountRefTodo(todo.Children); err != nil {
 		return err
 	}
