@@ -211,9 +211,11 @@ func (todo *Todo) Diffset(inter map[uint64]bool) []*Todo {
 	ret := make([]*Todo, 0)
 
 	for _, child := range todo.Children {
+
 		if _, ok := inter[child.Id]; ok {
 			continue
 		} else {
+			child.FindById()
 			ret = append(ret, child)
 		}
 	}
@@ -397,36 +399,17 @@ func (todo *Todo) FindFamiliy(familytype string) (res []*Todo) {
 
 //교집합을 구하는 함수
 func intersection(a, b []*Todo) (inter []*Todo) {
+	m := make(map[uint64]bool)
 
-	low, high := a, b
-	if len(a) > len(b) {
-		low = b
-		high = a
+	for _, item := range a {
+		m[item.Id] = true
 	}
 
-	done := false
-	for i, l := range low {
-		for j, h := range high {
-
-			f1 := i + 1
-			f2 := j + 1
-			if l.Id == h.Id {
-				inter = append(inter, h)
-				if f1 < len(low) && f2 < len(high) {
-
-					if low[f1] != high[f2] {
-						done = true
-					}
-				}
-
-				high = high[:j+copy(high[j:], high[j+1:])]
-				break
-			}
-		}
-
-		if done {
-			break
+	for _, item := range b {
+		if _, ok := m[item.Id]; ok {
+			inter = append(inter, item)
 		}
 	}
+
 	return
 }
