@@ -158,9 +158,16 @@ func (todo *Todo) UpdateTodo() error {
 	inter := intersection(todo.Children, origin.Children)
 	intermap := TodoListToMap(inter)
 	//db에 있는 정보에서 교집합을 빼는 부분
-	takoff := origin.Diffset(intermap)
+	takoff, err := origin.Diffset(intermap)
+	if err != nil {
+		return err
+	}
+
 	//바뀔 정보에서 교집합을 빼서 새롭게 참조되는 참조를 추가 하는 부분
-	addon := todo.Diffset(intermap)
+	addon, err := todo.Diffset(intermap)
+	if err != nil {
+		return err
+	}
 
 	newtodo := Todo{
 
@@ -207,7 +214,7 @@ func TodoListToMap(todolist []*Todo) map[uint64]bool {
 	}
 	return ret
 }
-func (todo *Todo) Diffset(inter map[uint64]bool) []*Todo {
+func (todo *Todo) Diffset(inter map[uint64]bool) ([]*Todo, error) {
 	ret := make([]*Todo, 0)
 
 	for _, child := range todo.Children {
@@ -215,11 +222,13 @@ func (todo *Todo) Diffset(inter map[uint64]bool) []*Todo {
 		if _, ok := inter[child.Id]; ok {
 			continue
 		} else {
-			child.FindById()
+			if err := child.FindById(); err != nil {
+				return ret, err
+			}
 			ret = append(ret, child)
 		}
 	}
-	return ret
+	return ret, nil
 
 }
 

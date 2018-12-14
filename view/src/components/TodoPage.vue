@@ -136,10 +136,6 @@
     },
 
     methods: {
-
-
-
-
       deleteTodo(id) {
         if(id != null){
           var vm = this;
@@ -152,6 +148,7 @@
                 this.todolist.splice(i,1)
               }
             }
+
           }).catch(e=>{
             alert(e.response.data.Message)
           });
